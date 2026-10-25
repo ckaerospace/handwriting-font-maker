@@ -1,0 +1,19 @@
+{
+ "chars": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?'\"-()&@#%+=/äöüÄÖÜß€",
+ "cols": 8,
+ "rows": 11,
+ "grid": [
+  0.07,
+  0.105,
+  0.93,
+  0.955
+ ],
+ "base": 0.72,
+ "xh": 0.3,
+ "label": [
+  0.0,
+  0.0,
+  0.3,
+  0.17
+ ]
+}

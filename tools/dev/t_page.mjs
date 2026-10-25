@@ -1,0 +1,10 @@
+import { loadImage, savePNG } from "./load.mjs";
+import { rgbaToGray, preparePage } from "../../public/js/page.js";
+const p = process.argv[2];
+const im = loadImage(p + ".jpg");
+let t = Date.now();
+const g = rgbaToGray(im.data, im.w, im.h);
+const pg = preparePage(g, im.w, im.h, { maxLong: 2400 });
+console.log("ms", Date.now() - t, "page", pg.w, pg.h, "quad ok", pg.quad.ok, pg.quad.reason || "", "skew deg", (pg.skew * 180 / Math.PI).toFixed(2), "ink", pg.inkFrac.toFixed(4), "rules", pg.rules.removed);
+const inv = new Float32Array(pg.d.length); for (let i = 0; i < inv.length; i++) inv[i] = 1 - pg.d[i];
+savePNG(p + "_ink.png", inv, pg.w, pg.h);

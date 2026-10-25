@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Handwriting Font Maker</title>
+<meta name="description" content="Turn a photo of your handwriting into a font you can install. Free, private, runs in your browser.">
+<meta name="theme-color" content="#1d3fbf">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Handwriting Font Maker</h1>
+    <p class="tag">Photo of your handwriting in, installable font out. Everything runs on your device. Nothing is uploaded.</p>
+    <ol class="steps" id="steps" aria-label="Progress">
+      <li data-step="upload" class="on"><b>1</b> Photo</li>
+      <li data-step="text"><b>2</b> Text</li>
+      <li data-step="review"><b>3</b> Check</li>
+      <li data-step="font"><b>4</b> Font</li>
+    </ol>
+  </div>
+</header>
+
+<main class="wrap">
+<div id="error" class="error" role="alert" hidden></div>
+
+<!-- STEP 1 -->
+<section id="s-upload" class="panel" data-testid="step-upload">
+  <h2>1. Add a photo of your handwriting</h2>
+  <p>Write a few lines on any paper, plain or ruled, with a dark pen, then take a photo or choose a scan. The more different letters it contains, the more complete your font will be.</p>
+  <div class="drop" id="drop">
+    <input type="file" id="file" accept="image/*" hidden data-testid="file-input">
+    <input type="file" id="camera" accept="image/*" capture="environment" hidden>
+    <button class="btn primary big" id="pick" type="button">Choose a photo or scan</button>
+    <button class="btn big touch-only" id="shoot" type="button">Take a photo</button>
+    <p class="muted small">or drop an image here. JPG, PNG, HEIC from iPhone usually works through the picker.</p>
+  </div>
+  <details class="tips" open>
+    <summary>Tips for a good photo</summary>
+    <ul>
+      <li>Daylight or a bright lamp, no hard shadow across the page.</li>
+      <li>Hold the phone parallel to the page and keep the whole sheet in view. Tilt and bent corners are corrected automatically.</li>
+      <li>Dark pen on light paper. Write at normal size, a few full lines (a pangram works well).</li>
+      <li>Want to start with the text for the best coverage? Write: <em>The quick brown fox jumps over the lazy dog.</em> and <em>Zw&ouml;lf Boxk&auml;mpfer jagen Viktor quer &uuml;ber den gro&szlig;en Sylter Deich.</em></li>
+    </ul>
+  </details>
+  <div class="cards2">
+    <div class="card">
+      <h3>Try a sample page</h3>
+      <p class="muted small">Synthetic pages made by drawing a handwriting-style font and warping it like a phone photo. Handy to see how it works.</p>
+      <button class="btn" id="sample0" type="button" data-testid="sample-print">Print style sample</button>
+      <button class="btn" id="sample1" type="button" data-testid="sample-script">Script style sample</button>
+    </div>
+    <div class="card" id="tplcard">
+      <h3>Best quality: printable template</h3>
+      <p class="muted small">Print it, write one character in each frame, photograph it. Every character is covered and labelled automatically.</p>
+      <p><a class="btn" href="template/handwriting-template-a4.pdf" download data-testid="tpl-a4">Template A4 (PDF)</a>
+         <a class="btn" href="template/handwriting-template-letter.pdf" download data-testid="tpl-letter">Template Letter (PDF)</a></p>
+      <button class="btn" id="pickTpl" type="button" data-testid="pick-template">I filled in the template</button>
+      <input type="file" id="fileTpl" accept="image/*" hidden data-testid="template-input">
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2 -->
+<section id="s-text" class="panel" hidden data-testid="step-text">
+  <h2>2. What does the page say?</h2>
+  <div class="pagewrap"><canvas id="pagePrev" class="pageprev" aria-label="Flattened page preview"></canvas></div>
+  <p id="pageInfo" class="muted small"></p>
+  <label for="transcript"><b>Type or paste the text you wrote</b> <span class="muted">(optional, but it makes the letters much more accurate)</span></label>
+  <textarea id="transcript" rows="6" spellcheck="false" placeholder="One line of text per line of handwriting, e.g.&#10;The quick brown fox jumps over the lazy dog." data-testid="transcript"></textarea>
+  <p id="lineInfo" class="muted small"></p>
+  <div class="row">
+    <button class="btn primary" id="go" type="button" data-testid="analyse">Analyse with this text</button>
+    <button class="btn" id="goAuto" type="button" data-testid="analyse-auto">I don't know the text, detect it</button>
+  </div>
+  <p class="muted small">Without text, letters are recognised by a small on-device model. It is fine for neat print and much weaker for joined-up writing, so expect more fixing in the next step.</p>
+  <div id="progress" class="progress" hidden><div></div><span id="progressText">Working</span></div>
+  <p><button class="link" id="backUpload" type="button">Use a different photo</button></p>
+</section>
+
+<!-- STEP 3 -->
+<section id="s-review" class="panel" hidden data-testid="step-review">
+  <h2>3. Check the letters</h2>
+  <div id="summary" class="summary" data-testid="summary"></div>
+  <div id="missingBox" class="missing" hidden>
+    <h3>Missing characters</h3>
+    <p class="muted small">These will not exist in your font until you add them (or turn on the base font fallback in the last step). Add another photo with a page that contains them. You can write, for example:</p>
+    <div id="suggest"></div>
+    <div id="missingChips" class="chips"></div>
+    <button class="btn" id="addPhoto" type="button" data-testid="add-photo">Add another photo</button>
+  </div>
+  <div class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-f="check" class="on">Needs a look <i id="nCheck"></i></button>
+    <button role="tab" data-f="used">Used in font <i id="nUsed"></i></button>
+    <button role="tab" data-f="all">All <i id="nAll"></i></button>
+    <button role="tab" data-f="removed">Removed <i id="nRem"></i></button>
+  </div>
+  <div id="grid" class="grid" data-testid="grid"></div>
+  <details class="pageview"><summary>Show on the page</summary>
+    <div class="row small" id="photoTabs"></div>
+    <div class="overlay"><canvas id="overlay"></canvas></div>
+    <p class="muted small">Green: used in the font. Amber: needs a look. Grey: not used. Tap a box to edit it.</p>
+  </details>
+  <div class="row"><button class="btn primary" id="toFont" type="button" data-testid="to-font">Continue to the font</button></div>
+</section>
+
+<!-- STEP 4 -->
+<section id="s-font" class="panel" hidden data-testid="step-font">
+  <h2>4. Your font</h2>
+  <div class="two">
+    <div>
+      <label for="fname"><b>Font name</b></label>
+      <input id="fname" type="text" value="My Handwriting" maxlength="40" data-testid="font-name" autocomplete="off">
+      <div class="sliders">
+        <label>Letter spacing <output id="o_track"></output><input id="p_track" type="range" min="-60" max="160" value="0" step="5"></label>
+        <label>Side bearing <output id="o_sb"></output><input id="p_sb" type="range" min="0" max="140" value="45" step="5"></label>
+        <label>Space width <output id="o_sp"></output><input id="p_sp" type="range" min="120" max="600" value="300" step="10"></label>
+        <label>Smoothing <output id="o_sm"></output><input id="p_sm" type="range" min="0" max="1" value="0.6" step="0.05"></label>
+        <label>Thickness <output id="o_th"></output><input id="p_th" type="range" min="-1" max="1" value="0" step="0.1"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="p_join"> Connect joined-up letters (zero side bearing where letters were cut apart)</label>
+      <label class="check"><input type="checkbox" id="p_fb" data-testid="fallback"> Fill missing characters with a plain base font (Patrick Hand, OFL). Off by default.</label>
+      <p id="missingNote" class="warn" hidden></p>
+    </div>
+    <div>
+      <div class="previewbox">
+        <textarea id="ptext" rows="4" spellcheck="false" data-testid="preview-text">The quick brown fox jumps over the lazy dog.
+Pack my box with five dozen liquor jugs!</textarea>
+        <label class="small">Preview size <input id="psize" type="range" min="20" max="96" value="44"></label>
+        <div id="preview" class="preview" data-testid="preview" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row dl">
+    <button class="btn primary big" id="dlTTF" type="button" data-testid="dl-ttf">Download TTF</button>
+    <button class="btn big" id="dlOTF" type="button" data-testid="dl-otf">Download OTF</button>
+    <button class="btn big" id="dlWOFF" type="button" data-testid="dl-woff">Download WOFF (for websites)</button>
+  </div>
+  <p class="muted small" id="dlInfo"></p>
+  <h3>Install it</h3>
+  <details class="os" open><summary>Windows</summary><p>Open the downloaded .ttf (or .otf), click <b>Install</b>. Or right-click it and choose <b>Install for all users</b>. Restart the app you want to use it in.</p></details>
+  <details class="os"><summary>macOS</summary><p>Double-click the .ttf or .otf and click <b>Install Font</b> in Font Book. Restart open apps.</p></details>
+  <details class="os"><summary>Linux</summary><p>Copy the file to <code>~/.local/share/fonts/</code> and run <code>fc-cache -f</code>. Or open it in your font viewer and click Install.</p></details>
+  <details class="os"><summary>iPhone and iPad</summary><p>iOS cannot install a bare font file from the browser. You need a free font app such as <b>AnyFont</b>: download the .ttf, open it with that app, and follow its steps to install the profile (Settings, then General, then VPN &amp; Device Management or Profiles). It then shows in apps that support custom fonts, such as Pages, Keynote and Word. Exact steps change between iOS versions.</p></details>
+  <details class="os"><summary>Android</summary><p>Android has no universal way to install a system font. Some phones (certain Samsung, Xiaomi and Huawei models) accept fonts through their theme or font settings. Everywhere else, import the .ttf into apps that allow custom fonts, for example Canva, Word, PowerPoint or a launcher that supports fonts.</p></details>
+  <details class="os"><summary>Websites (WOFF)</summary><p>Upload the .woff next to your page and use <code>@font-face { font-family: "My Handwriting"; src: url(my-handwriting.woff) format("woff"); }</code>.</p></details>
+  <p><button class="link" id="backReview" type="button">Back to check the letters</button></p>
+</section>
+</main>
+
+<footer class="wrap foot">
+  <p class="muted small">Free and open source (MIT). No tracking, no uploads, no cookies. <a href="https://github.com/ckaerospace/handwriting-font-maker">Source and licences</a>. Use only your own handwriting.</p>
+</footer>
+
+<dialog id="editor" data-testid="editor">
+  <form method="dialog" class="ed">
+    <div class="edhead"><b>Edit glyph</b> <button class="x" value="close" aria-label="Close">&times;</button></div>
+    <canvas id="edCanvas" width="360" height="260"></canvas>
+    <p id="edInfo" class="muted small"></p>
+    <div class="row">
+      <label>Letter <input id="edChar" type="text" maxlength="2" size="3" autocomplete="off" autocapitalize="off" data-testid="ed-char"></label>
+      <button class="btn" type="button" id="edGuess"></button>
+    </div>
+    <div class="row">
+      <button class="btn primary" type="button" id="edPin" data-testid="ed-pin">Use this one</button>
+      <button class="btn danger" type="button" id="edDel" data-testid="ed-del">Delete</button>
+      <button class="btn" type="button" id="edRestore" hidden>Restore</button>
+    </div>
+    <div class="row">
+      <label class="grow">Split at <input id="edSplit" type="range" min="10" max="90" value="50"></label>
+      <button class="btn" type="button" id="edSplitGo" data-testid="ed-split">Split</button>
+      <button class="btn" type="button" id="edMerge" data-testid="ed-merge">Merge with next</button>
+    </div>
+    <div class="row"><button class="btn" value="close">Done</button></div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

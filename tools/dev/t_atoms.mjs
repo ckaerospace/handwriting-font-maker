@@ -1,0 +1,12 @@
+import { loadImage } from "./load.mjs";
+import { rgbaToGray, preparePage } from "../../public/js/page.js";
+import { segmentLines } from "../../public/js/segment.js";
+const p = process.argv[2], li = +process.argv[3];
+const im = loadImage(p + ".jpg"); const g = rgbaToGray(im.data, im.w, im.h);
+const pg = preparePage(g, im.w, im.h, { maxLong: 2400 }); const seg = segmentLines(pg.d, pg.w, pg.h);
+const L = seg.lines[li]; console.log(L.y0, L.y1, L.base, L.xh, L.x0, L.x1);
+console.log(L.atoms.map(i => { const a = seg.atoms[i]; return `${a.x0}-${a.x1}(${a.y0}-${a.y1})${a.sat ? "S" : ""}`; }).join(" "));
+console.log(L.gaps.map(g => g.x0 + "-" + g.x1).join(" "));
+seg.atoms.forEach((a, id) => { if (a && a.x0 >= 900 && a.x1 <= 1060 && a.y0 > 330 && a.y1 < 470) console.log("atom", id, a.x0, a.x1, a.y0, a.y1, a.area, "line", seg.lines.findIndex(l => l.atoms.includes(id)), Object.keys(a).join(",")); });
+console.log(Object.keys(seg));
+seg.atoms.forEach((a, id) => { if (a && a.x1 > 860 && a.x0 < 1060 && a.y0 < 440 && a.y1 > 360) console.log("A2", id, a.x0, a.x1, a.y0, a.y1, a.area, "dead", a.dead, "line", seg.lines.findIndex(l => l.atoms.includes(id))); });

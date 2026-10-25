@@ -1,0 +1,18 @@
+{
+  "name": "handwriting-font-maker",
+  "version": "1.0.0",
+  "description": "Turn a photo of your handwriting into an installable font (TTF, OTF, WOFF). Runs entirely in the browser.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "serve": "python3 -m http.server 8123 --directory public",
+    "test": "node tests/e2e.mjs all"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "jpeg-js": "^0.4.4",
+    "opentype.js": "^2.0.0",
+    "pngjs": "^7.0.0"
+  }
+}

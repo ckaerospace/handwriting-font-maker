@@ -1,0 +1,5 @@
+node_modules/
+e2e-out/
+__pycache__/
+test-results/
+*.pyc
