@@ -2,7 +2,9 @@
 
 Take a photo or scan of any page of your handwriting and get an installable font (TTF, OTF and WOFF). Everything runs in your browser. Nothing is uploaded, there is no server and no tracking.
 
-Live app: see the Render URL in the repository description. Source: this repo. Static site, no build step: the app is the `public/` folder.
+Live app: https://handwriting-font-maker-7i91.onrender.com (Render static site, auto-deploys from `main`). Printable template: [A4 PDF](https://handwriting-font-maker-7i91.onrender.com/template/handwriting-template-a4.pdf). Static site, no build step: the app is the `public/` folder.
+
+Screenshots: [template](docs/screenshots/template.png), [review screen on Pixel 7](docs/screenshots/app-review-pixel7.png), [preview in the generated font](docs/screenshots/font-preview-desktop.png).
 
 ## How it works
 
